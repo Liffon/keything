@@ -27,6 +27,8 @@ void send_key(int fd, int code)
 int main() {
     uinput_user_dev uud = {};
 
+    sleep(1);
+
     int in_device = open("/dev/input/event3", O_RDONLY);
     int out_device = open("/dev/uinput", O_WRONLY | O_NONBLOCK);
     printf("in_device is %d\n", in_device);
@@ -34,27 +36,34 @@ int main() {
 
     /*
      * Enable the device that is about to be created
-     * to pass key events, in this case the space key.
+     * to pass key events.
      */
+    ioctl(out_device, UI_SET_EVBIT, EV_KEY);
+    for(int key = KEY_ESC; key <= KEY_MICMUTE; key++)
+    {
+        ioctl(out_device, UI_SET_KEYBIT, key);
+    }
 
+    /* Actually create the device */
+
+    snprintf(uud.name, UINPUT_MAX_NAME_SIZE, "fake keyboard thing");
+    write(out_device, &uud, sizeof(uud));
+    ioctl(out_device, UI_DEV_CREATE);
 
     /*
      * Sleep for a bit to wait for userspace to notice the new device
      */
 
-    sleep(1);
+    send_key(out_device, KEY_SPACE);
 
-    puts("Please type something.");
+    puts("Starting soon ...");
+
+    sleep(5);
+
+    puts("Please try typing.");
     printf("> ");
     char buffer[100];
     memset(buffer, 0, sizeof(buffer));
-
-    /* Key press, report the event, send key release, and report again */
-
-    /*
-     * Wait for userspace to read the events before destroying the device
-     */
-    sleep(2);
 
     printf("Grabbing!\n");
     ioctl(in_device, EVIOCGRAB, 1);
@@ -69,7 +78,9 @@ int main() {
             printf("Read %d %d %d\n", event.type, event.code, event.value);
         }
 
-        // TODO: repost events
+        if (event.code != KEY_F) {
+            write(out_device, &event, sizeof(event));
+        }
     }
 
     printf("Ungrabbing!\n");
