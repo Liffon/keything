@@ -31,8 +31,14 @@ int main() {
 
     int in_device = open("/dev/input/event3", O_RDONLY);
     int out_device = open("/dev/uinput", O_WRONLY | O_NONBLOCK);
-    printf("in_device is %d\n", in_device);
-    printf("out_device is %d\n", out_device);
+    if (in_device < 0) {
+        puts("Could not open input device. Does it exist? Do you need to sudo?");
+        _exit(1);
+    }
+    if (out_device < 0) {
+        puts("Could not open output device. I don't know why!");
+        _exit(1);
+    }
 
     /*
      * Enable the device that is about to be created
