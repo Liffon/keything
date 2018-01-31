@@ -62,29 +62,52 @@ int main() {
 
     send_key(out_device, KEY_SPACE);
 
-    puts("Starting soon ...");
-
-    sleep(5);
-
-    puts("Please try typing.");
-    printf("> ");
     char buffer[100];
     memset(buffer, 0, sizeof(buffer));
 
     printf("Grabbing!\n");
     ioctl(in_device, EVIOCGRAB, 1);
 
-    for (int num_events = 0; num_events < 100; num_events++)
+    bool in_super_mode = false;
+
+    for (;;)
     {
         input_event event;
         int rd = read(in_device, &event, sizeof(input_event));
-        if (event.type == EV_KEY) {
-            printf("Key event! Code is %d, value is %d\n", event.code, event.value);
-        } else {
-            printf("Read %d %d %d\n", event.type, event.code, event.value);
-        }
+        //if (event.type == EV_KEY) {
+            //printf("Key event! Code is %d, value is %d\n", event.code, event.value);
+        //} else {
+            //printf("Read %d %d %d\n", event.type, event.code, event.value);
+        //}
 
-        if (event.code != KEY_F) {
+        if (event.type == EV_KEY) {            
+            if (event.code == KEY_CAPSLOCK) {
+                in_super_mode = event.value;
+            } else if (in_super_mode) {
+                if (event.code == KEY_C) {
+                    break;
+                }
+
+                input_event new_event = event;
+                if (event.code == KEY_I) {
+                    new_event.code = KEY_UP;
+                    write(out_device, &new_event, sizeof(new_event));
+                } else if (event.code == KEY_J) {
+                    new_event.code = KEY_LEFT;
+                    write(out_device, &new_event, sizeof(new_event));
+                } else if (event.code == KEY_K) {
+                    new_event.code = KEY_DOWN;
+                    write(out_device, &new_event, sizeof(new_event));
+                } else if (event.code == KEY_L) {
+                    new_event.code = KEY_RIGHT;
+                    write(out_device, &new_event, sizeof(new_event));
+                } else {
+                    write(out_device, &event, sizeof(event));
+                }
+            } else {
+                write(out_device, &event, sizeof(event));
+            }
+        } else {
             write(out_device, &event, sizeof(event));
         }
     }
@@ -92,8 +115,7 @@ int main() {
     printf("Ungrabbing!\n");
     ioctl(in_device, EVIOCGRAB, 0);
 
-    sleep(2);
-    printf("Good job. How did it go?\n");
+    sleep(1);
 
     close(in_device);
 
