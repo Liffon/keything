@@ -86,7 +86,7 @@ int main() {
     /* Actually create the device */
 
     //TODO(liffon): Make up a name for this
-    snprintf(uud.name, UINPUT_MAX_NAME_SIZE, "fake keyboard thing");
+    snprintf(uud.name, UINPUT_MAX_NAME_SIZE, "Keything Virtual Input Device");
     write(out_device, &uud, sizeof(uud));
     ioctl(out_device, UI_DEV_CREATE);
 

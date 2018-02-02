@@ -1,3 +1,3 @@
 #!/bin/bash
 
-gcc both.cpp -o keything
+gcc keything.cpp -o keything
