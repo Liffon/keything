@@ -43,13 +43,14 @@ int main() {
     char *sudo_uid_str = getenv("SUDO_UID");
     if (!sudo_uid_str) {
         puts("I would prefer it if you ran this through sudo.");
-        _exit(1);
+        puts("(You have to have root privileges for it to work anyway.)");
+        exit(1);
     }
     uid_t sudo_uid = atoi(sudo_uid_str);
     //printf("SUDO_UID = %d\n", sudo_uid);
     if (!sudo_uid) {
         puts("Hey, SUDO_UID should not be 0!");
-        _exit(1);
+        exit(1);
     }
 
     usleep(100000);
@@ -57,20 +58,20 @@ int main() {
     int in_device = open("/dev/input/event3", O_RDONLY);
     if (in_device < 0) {
         puts("Could not open input device. Does it exist? Do you need to sudo?");
-        _exit(1);
+        exit(1);
     }
 
 
     int out_device = open("/dev/uinput", O_WRONLY | O_NONBLOCK);
     if (out_device < 0) {
         puts("Could not open output device. I don't know why!");
-        _exit(1);
+        exit(1);
     }
 
     puts("Opened devices. Don't need to be root now.");
     if (setuid(sudo_uid)) {
         puts("Failed to deescalate privileges!");
-        _exit(1);
+        exit(1);
     }
 
     /*
@@ -101,7 +102,7 @@ int main() {
     puts("Grabbing!");
     if(ioctl(in_device, EVIOCGRAB, 1)) {
         puts("Failed to grab input device! Is another instance running?");
-        _exit(1);
+        exit(1);
     }
 
     bool in_super_mode = false;
